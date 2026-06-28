@@ -1,0 +1,17 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: microcommerce_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: products_db
+      MYSQL_USER: audin
+      MYSQL_PASSWORD: password
+    ports:
+      - "3307:3306"
+    volumes:
+      - microcommerce_data:/var/lib/mysql
+
+volumes:
+  microcommerce_data:

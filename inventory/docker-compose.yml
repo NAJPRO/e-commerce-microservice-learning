@@ -1,0 +1,17 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: inventory_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: inventory_db
+      MYSQL_USER: audin
+      MYSQL_PASSWORD: password
+    ports:
+      - "3309:3306"
+    volumes:
+      - inventory_data:/var/lib/mysql
+
+volumes:
+  inventory_data:
