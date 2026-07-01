@@ -11,4 +11,12 @@ public class ProductDto {
     private String id;
     private String name;
     private BigDecimal price;
+
+    public String toString() {
+        return "ProductDto{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                '}';
+    }
 }

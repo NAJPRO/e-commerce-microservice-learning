@@ -30,7 +30,7 @@ public class ProductServiceImpl implements ProductService{
         if(repository.existsBySku(product.getSku())){
             throw new ProductExistBySkuException("Un produit existe déjà avec le sku " + product.getSku());
         }
-        product.setCategory(categoryService.getCategory(productRequest.getCategory()));
+        product.setCategory(categoryService.getCategory(productRequest.getCategoryId()));
         product = repository.save(product); 
         System.out.println("Product created with ID: " + product.getId());
         return mapper.toProductResponse(product);
@@ -59,6 +59,7 @@ public class ProductServiceImpl implements ProductService{
         if(product != null){
             product.setName(productRequest.getName());
             product.setPrice(productRequest.getPrice());
+            product.setCategory(categoryService.getCategory(productRequest.getCategoryId()));
             repository.save(product);
         }        
     }

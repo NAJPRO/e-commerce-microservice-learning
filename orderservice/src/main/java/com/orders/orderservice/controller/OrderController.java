@@ -34,6 +34,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(@RequestBody @Valid OrderRequest entity) {
+        System.out.println("Received OrderRequest: " + entity.toString());
         OrderResponse response = service.createOrder(entity);
         return ResponseEntity.ok(ApiResponse.success(200, "Commande créée avec succès", response));
     }

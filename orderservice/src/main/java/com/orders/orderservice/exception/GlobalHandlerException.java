@@ -42,4 +42,16 @@ public class GlobalHandlerException {
                 .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Une erreur interne est survenue"));
     }
 
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleProductNotFoundException(ProductNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(NoStockException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoStockException(NoStockException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    }
+
 }

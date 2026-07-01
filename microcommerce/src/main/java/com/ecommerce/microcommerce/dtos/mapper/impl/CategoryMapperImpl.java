@@ -24,6 +24,7 @@ public class CategoryMapperImpl implements CategoryMapper{
     public CategoryResponse toResponse(Category entity) {
         CategoryResponse cat = new CategoryResponse();
         cat.setName(entity.getName());
+        cat.setId(entity.getId());
         return cat;
     }
 

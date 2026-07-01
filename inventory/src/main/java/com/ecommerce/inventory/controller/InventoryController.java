@@ -21,9 +21,11 @@ import com.ecommerce.inventory.service.InventoryService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/inventories")
 @RequiredArgsConstructor
+@Slf4j
 public class InventoryController {
 
     private final InventoryService inventoryService;
@@ -69,6 +71,7 @@ public class InventoryController {
     public ResponseEntity<ApiResponse<Boolean>> isProductInStock(
             @PathVariable String productId,
             @PathVariable Integer quantity) {
+        log.info("Checking stock for productId: {}, quantity: {}", productId, quantity);
         return ResponseEntity.ok(ApiResponse.success(200, "", inventoryService.isProductInStock(productId, quantity)));
     }
 

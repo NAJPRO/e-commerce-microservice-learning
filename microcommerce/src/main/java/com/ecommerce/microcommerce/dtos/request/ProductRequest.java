@@ -30,10 +30,10 @@ public class ProductRequest {
     public void setSku(String sku){
         this.sku = sku;
     }
-    public String getCategory(){
+    public String getCategoryId(){
         return categoryId;
     }
-    public void setCategory(String cat){
+    public void setCategoryId(String cat){
         this.categoryId = cat;
     }
     public String getDescription(){

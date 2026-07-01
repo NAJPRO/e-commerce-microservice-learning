@@ -14,4 +14,11 @@ public class OrderRequest {
     private String customerName;
     @NotEmpty
     private List<OrderItemRequest> items;
+
+    public String toString() {
+        return "OrderRequest{" +
+                "customerName='" + customerName + '\'' +
+                ", items=" + items +
+                '}';
+    }
 }
