@@ -8,6 +8,7 @@ public class ProductResponse {
     private BigDecimal price;
     private String sku;
     private String categoryId;
+    private String categoryName;
     private String description;
     private String imageUrl;
 
@@ -60,5 +61,13 @@ public class ProductResponse {
 
     public void setCategoryId(String categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 }

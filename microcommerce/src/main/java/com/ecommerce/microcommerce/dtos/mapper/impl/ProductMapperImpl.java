@@ -17,6 +17,7 @@ public class ProductMapperImpl implements ProductMapper {
         productResponse.setPrice(product.getPrice());
         productResponse.setSku(product.getSku());
         productResponse.setCategoryId(product.getCategory().getId());
+        productResponse.setCategoryName(product.getCategory().getName());
         productResponse.setDescription(product.getDescription());
         return productResponse;
     }

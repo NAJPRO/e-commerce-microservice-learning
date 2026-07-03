@@ -21,7 +21,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-@Builder
 @SQLDelete(sql = "UPDATE inventory SET deleted = true, deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
 public class Inventory extends ParentEntity {
@@ -33,16 +32,16 @@ public class Inventory extends ParentEntity {
     private String productId;
 
     @Column(name = "quantity_available")
-    private Integer quantityAvailable;
+    private Integer quantityAvailable = 0;
 
     @Column(name = "quantity_reserved")
-    private Integer quantityReserved;
+    private Integer quantityReserved = 0;
 
     @Column(name = "quantity_sold")
-    private Integer quantitySold;
+    private Integer quantitySold = 0;
 
     @Column(name = "reorder_threshold")
-    private Integer reorderThreshold;
+    private Integer reorderThreshold = 0;
 
     @Column(name = "warehouse_location")
     private String warehouseLocation;

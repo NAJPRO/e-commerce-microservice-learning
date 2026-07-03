@@ -1,0 +1,50 @@
+spring:
+    application:
+        name: notification
+
+    datasource:
+        url: jdbc:postgresql://localhost:5432/notification_db
+        username: root
+        password: password
+        driver-class-name: org.postgresql.Driver
+
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: true
+        open-in-view: false
+        properties:
+            hibernate:
+                format_sql: true
+
+    kafka:
+        bootstrap-servers: localhost:9092
+        consumer:
+            group-id: notification-service
+            auto-offset-reset: earliest
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+            properties:
+                spring:
+                    json:
+                        trusted:
+                            packages: "*"
+                    use-type-info: false
+                    deserializer:
+                        value:
+                            delegate:
+                                class: org.springframework.kafka.support.serializer.JsonDeserializer
+
+logging:
+  level:
+    org:
+      springframework:
+        security: INFO
+
+server:
+  servlet:
+    context-path: /api/notification-service
+  port: 8075
+
+
+

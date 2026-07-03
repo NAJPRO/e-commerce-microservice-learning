@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.orders.orderservice.client.InventoryClient;
 import com.orders.orderservice.client.ProductClient;
+import com.orders.orderservice.dto.event.OrderCreatedEvent;
 import com.orders.orderservice.dto.mapper.OrderMapper;
 import com.orders.orderservice.dto.request.OrderItemRequest;
 import com.orders.orderservice.dto.request.OrderRequest;
@@ -22,9 +23,9 @@ import com.orders.orderservice.exception.NoStockException;
 import com.orders.orderservice.exception.ProductNotFoundException;
 import com.orders.orderservice.repository.OrderItemRepository;
 import com.orders.orderservice.repository.OrderRepository;
+import com.orders.orderservice.service.OrderEventProducer;
 import com.orders.orderservice.service.OrderService;
-
-import io.swagger.v3.oas.models.responses.ApiResponse;
+import com.orders.orderservice.payload.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductClient productClient;
     private final InventoryClient inventoryClient;
     private final OrderMapper orderMapper;
+    private final OrderEventProducer orderEventProducer;
 
     @Override
     public OrderResponse createOrder(OrderRequest orderRequest) {
@@ -62,14 +64,18 @@ public class OrderServiceImpl implements OrderService {
             Boolean isInStock = false;
             log.info("isInStock before calling inventoryClient: {}", isInStock);
             try {
-                log.info("Calling inventoryClient.checkStock for productId: {}, quantity: {}", item.getProductId(), item.getQuantity());
-                com.orders.orderservice.payload.ApiResponse<Boolean> apiResponse = inventoryClient.checkStock(item.getProductId(), item.getQuantity());
+                log.info("Calling inventoryClient.checkStock for productId: {}, quantity: {}", item.getProductId(),
+                        item.getQuantity());
+                ApiResponse<Boolean> apiResponse = inventoryClient.checkStock(item.getProductId(), item.getQuantity());
                 log.info("Received ApiResponse from inventoryClient: {}", apiResponse);
                 isInStock = apiResponse.data();
             } catch (NoStockException e) {
                 log.error("No stock for product: {}", item.getProductId(), e);
                 order.setStatus("REJECTED_NO_STOCK");
                 orderRepository.save(order);
+                throw e;
+            } catch (Exception e) {
+                log.error("Inventory call failed", e);
                 throw e;
             }
 
@@ -87,30 +93,64 @@ public class OrderServiceImpl implements OrderService {
         for (OrderItemRequest orderItem : orderRequest.getItems()) {
             ReserveStockRequest body = new ReserveStockRequest();
             body.setQuantity(orderItem.getQuantity());
-            inventoryClient.reserveProduct(orderItem.getProductId(), body);
+            try {
+                inventoryClient.reserveProduct(orderItem.getProductId(), body);
+            } catch (Exception e) {
+                log.error("Failed to reserve product: {}", orderItem.getProductId(), e);
+                order.setStatus("REJECTED_RESERVATION_FAILED");
+                orderRepository.save(order);
+                throw e;
+            }
         }
         log.info("Products reserved for order: {}", order.getId());
         // Build Order Items
         for (OrderItemRequest orderItem : orderRequest.getItems()) {
+            log.info("Creating order item for productId: {}, quantity: {}", orderItem.getProductId(),
+                    orderItem.getQuantity());
             OrderItem item = new OrderItem();
-            ProductDto productDto = productClient.getProductById(item.getProductId()).data();
-            item.setOrder(order);
-            item.setProductId(productDto.getId());
-            item.setProductName(productDto.getName());
-            item.setUnitPrice(productDto.getPrice());
-            item.setQuantity(orderItem.getQuantity());
-
-            item.setSubTotal(productDto.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
-            orderItemRepository.save(item);
+            try {
+                ProductDto productDto = productClient.getProductById(orderItem.getProductId()).data();
+                
+                item.setOrder(order);
+                item.setProductId(productDto.getId());
+                item.setProductName(productDto.getName());
+                item.setUnitPrice(productDto.getPrice());
+                item.setQuantity(orderItem.getQuantity());
+    
+                item.setSubTotal(productDto.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
+                log.info("Saving order item: {}", item);
+                orderItemRepository.save(item);
+            } catch (Exception e) {
+                log.error("Failed to create order item for productId: {}", orderItem.getProductId(), e);
+                order.setStatus("REJECTED_ITEM_CREATION_FAILED");
+                orderRepository.save(order);
+                throw e;
+            }
             // Confirm
             ReserveStockRequest body = new ReserveStockRequest();
             body.setQuantity(orderItem.getQuantity());
-            inventoryClient.confirmProductReservation(item.getProductId(), body);
+            try {
+                inventoryClient.confirmProductReservation(item.getProductId(), body);
+                
+            } catch (Exception e) {
+                log.error("Failed to confirm product reservation: {}", item.getProductId(), e);
+                order.setStatus("REJECTED_CONFIRMATION_FAILED");
+                orderRepository.save(order);
+                throw e;
+            }
         }
         log.info("Order created with ID: {}", order.getId());
         order.setTotalAmount(calculateTotal(order.getId()));
         order.setStatus("CONFIRMED");
         log.info("Order confirmed with ID: {}", order.getId());
+
+        log.info("Publishing OrderCreatedEvent for order ID: {}", order.getId());
+        orderEventProducer.publishOrderCreatedEvent(new OrderCreatedEvent(
+                order.getId(),
+                order.getCustomerName(),
+                order.getTotalAmount(),
+                order.getCreatedAt()));
+        log.info("End publishing OrderCreatedEvent for order ID: {}", order.getId());
         return orderMapper.toResponse(orderRepository.save(order));
     }
 

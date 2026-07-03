@@ -11,7 +11,7 @@ import com.orders.orderservice.payload.ApiResponse;
 
 @FeignClient(name = "inventory-service", url = "${inventory.service.url}")
 public interface InventoryClient {
-    @GetMapping("{productId}/stock/{quantity}")
+    @GetMapping("/{productId}/stock/{quantity}")
     ApiResponse<Boolean> checkStock(@PathVariable("productId") String productId, @PathVariable("quantity") Integer quantity);
     @PostMapping("/{productId}/reserve")
     ApiResponse<Void> reserveProduct(@PathVariable("productId") String productId, @RequestBody ReserveStockRequest request);

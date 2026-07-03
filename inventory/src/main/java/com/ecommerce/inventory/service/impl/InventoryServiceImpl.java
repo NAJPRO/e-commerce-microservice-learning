@@ -99,7 +99,7 @@ public class InventoryServiceImpl implements InventoryService {
             throw new IllegalArgumentException("Not enough stock available for product with ID " + productId);
         }
         inventory.setQuantityAvailable(inventory.getQuantityAvailable() - quantity);
-        inventory.setQuantityReserved(inventory.getQuantityReserved() + quantity);
+        inventory.setQuantityReserved(inventory.getQuantityReserved() == null ? 0 : inventory.getQuantityReserved() + quantity);
         repository.save(inventory);
 
     }
